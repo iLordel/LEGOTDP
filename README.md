@@ -7,7 +7,7 @@
 A Decky Loader plugin for SteamOS Gaming Mode — firmware-first, per-game profiles,
 a separate charger profile, live power draw, English and Russian.
 
-[![Build](https://github.com/LORDEL/LTDP/actions/workflows/build.yml/badge.svg)](https://github.com/LORDEL/LTDP/actions/workflows/build.yml)
+
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 [![Decky Loader](https://img.shields.io/badge/Decky-plugin-5c5cff.svg)](https://decky.xyz)
 

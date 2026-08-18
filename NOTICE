@@ -1,0 +1,57 @@
+LTDP
+Copyright (c) 2026 Rayekkk
+Copyright (c) 2026 LORDEL (the Legion Go 1 port)
+
+LTDP is a fork of LeGoTDP (https://github.com/Rayekkk/LeGoTDP), adapted to the
+original Lenovo Legion Go (83E1, Ryzen Z1 Extreme). The original work and its
+copyright are unchanged; the port adds a per-device capability table, an
+acpi_call backend for the Lenovo GameZone firmware interface, an English and
+Russian interface, and the diagnostics that go with them.
+
+This product is licensed under the BSD 3-Clause License. See LICENSE for the full text.
+
+================================================================================
+Interface documentation used by the acpi_call backend
+================================================================================
+
+The Lenovo "Other Method" / GameZone WMI interface (\_SB.GZFD.WMAE / WMAA), its
+attribute-id encoding and its custom-mode requirement were taken from the
+mainline kernel drivers in drivers/platform/x86/lenovo/ (GPL-2.0-or-later,
+Copyright (C) 2025 Derek J. Clark) and from Handheld Daemon's adjustor
+(https://github.com/hhd-dev/adjustor). No code from either project is included
+here; only the documented wire format is implemented.
+
+================================================================================
+Third-party components used by this plugin
+================================================================================
+
+RyzenAdj (the `bin/ryzenadj` binary)
+------------------------------------
+Version 0.19.0
+Copyright (C) 2018-2024 Jiaxun Yang and contributors
+Homepage: https://github.com/FlyGoat/RyzenAdj
+
+RyzenAdj is licensed under the GNU Lesser General Public License, version 3.
+The full text is available at: https://www.gnu.org/licenses/lgpl-3.0.html
+
+The binary is **not** distributed in this plugin's release archive. It is
+downloaded on first run from the project's official GitHub releases, over
+https, from a fixed allowlist of GitHub hosts, and stored in `bin/ryzenadj`
+inside the plugin directory. Anyone who prefers to supply their own build can
+drop it there before the plugin first starts and nothing will be fetched.
+
+The plugin invokes RyzenAdj as a separate process and does not link against
+it, so the plugin's own source remains under the BSD 3-Clause License. Anyone
+redistributing this plugin must keep this notice intact.
+
+On a Legion Go 2 or a Legion Go S, RyzenAdj is only needed for the extended TDP
+range in the Extras section; the standard range goes through the Lenovo
+firmware and the plugin degrades gracefully when the download fails.
+
+On the original Legion Go it can be more than that. Where the kernel carries
+neither the lenovo-wmi drivers nor acpi_call - which is the case on the kernel
+SteamOS 3.7 ships - RyzenAdj is the only way to set a limit at all. For that
+reason the plugin will fall back to a RyzenAdj already installed on the system
+when its own verified download cannot be had. That copy is not checksum
+verified, is only ever reached after the verified path has failed, and is
+reported as unverified in the log and in the Diagnostics panel.

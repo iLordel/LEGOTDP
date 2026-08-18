@@ -7,7 +7,8 @@
 A Decky Loader plugin for SteamOS Gaming Mode — firmware-first, per-game profiles,
 a separate charger profile, live power draw, English and Russian.
 
-
+[![Build](https://github.com/LORDEL/LTDP/actions/workflows/build.yml/badge.svg)](https://github.com/LORDEL/LTDP/actions/workflows/build.yml)
+[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 [![Decky Loader](https://img.shields.io/badge/Decky-plugin-5c5cff.svg)](https://decky.xyz)
 
 [Установка и описание по-русски →](README.ru.md)
@@ -16,12 +17,16 @@ a separate charger profile, live power draw, English and Russian.
 
 ---
 
-> **Status: not yet verified on hardware.**
-> Every code path is covered by 212 automated tests with DMI, sysfs and the ACPI
-> transport stubbed, and the build is reproducible — but no physical Legion Go 1
-> has run it yet. If you have one, [the diagnostic script](#diagnostics) tells you
-> in ten seconds which backend your kernel gives you; please open an issue with
-> its output.
+> **Status: tested on hardware.**
+> Run and verified on a Legion Go 1 (`83E1`, Ryzen Z1 Extreme) against the
+> [checklist below](#verifying-on-hardware) — limits apply and hold, per-game
+> profiles switch, and the charger and suspend/resume transitions do not knock
+> them off. On top of that, 212 automated tests cover every code path with DMI,
+> sysfs and the ACPI transport stubbed.
+>
+> Your kernel decides which backend you get, so if anything behaves differently
+> on your machine, [the diagnostic script](#diagnostics) says why in ten seconds
+> — please attach its output to an issue.
 
 ---
 

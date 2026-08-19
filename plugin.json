@@ -14,7 +14,6 @@
       "hardware",
       "performance"
     ],
-    "description": "TDP control for the original Lenovo Legion Go (Z1 Extreme) from the Steam overlay. Firmware-first backends, per-game profiles, separate charger profile, live power draw.",
-    "image": "https://raw.githubusercontent.com/iLordel/LEGOTDP/main/docs/store.jpg"
+    "description": "TDP control for the original Lenovo Legion Go (Z1 Extreme) from the Steam overlay. Firmware-first backends, per-game profiles, a separate charger profile, fan modes, an 80% charge limit, live power and temperature."
   }
 }

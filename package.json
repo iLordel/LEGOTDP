@@ -1,6 +1,6 @@
 {
   "name": "ltdp",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "DeckyLoader plugin for TDP limits on the original Lenovo Legion Go, through Lenovo WMI, acpi_call or ryzenadj",
   "license": "BSD-3-Clause",
   "type": "module",

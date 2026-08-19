@@ -89,6 +89,16 @@ at runtime against what the firmware itself reports.
   `charge_control_end_threshold` where a driver publishes it, and through the
   firmware where none does. Independent of the Enable switch, and removed on
   uninstall so nothing is left holding the battery back invisibly.
+- **Two tabs**, paged with R1 / R2 (L1 / L2 go back) or by touch: **Power** and
+  **Enhancers**. The second lists what else on this machine changes how a game
+  looks or how many frames it makes — MAKO and its renderer, Lossless Scaling,
+  MangoHud, vkBasalt — with installed-or-not and the path each was found at.
+  It reports them; it does not drive them. [MAKO](https://github.com/eugeniosegala/MAKO)
+  is a separate Decky plugin with a Vulkan layer of its own, under GPL-3.0
+  against this project's BSD-3-Clause, and it needs a licensed copy of Lossless
+  Scaling — one plugin cannot render or control another. Knowing whether frame
+  generation is present is still worth having next to a TDP limit: generated
+  frames are what let the limit come down.
 - **English, Russian and Spanish**, switched in the panel and remembered —
   including the text the backend produces, which is passed to the panel as
   string keys rather than finished sentences.

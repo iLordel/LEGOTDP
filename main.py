@@ -957,6 +957,77 @@ def _profile_choices() -> list:
         return []
 
 
+# ── Enhancers ──────────────────────────────────────────────────────────────────
+#
+# Tools that change how a game looks or how many frames it produces. LTDP does
+# not drive any of them: MAKO is a separate Decky plugin with its own backend
+# and a Vulkan layer of its own, under a different licence, and a Decky plugin
+# cannot render another one's interface. What is useful - and truthful - is to
+# say what is on this machine, because frame generation and a TDP limit are two
+# halves of the same decision: generated frames are what let the limit come down.
+
+def _user_home() -> str:
+    """The desktop user's home, not root's.
+
+    The plugin runs as root, so os.path.expanduser("~") is the wrong answer.
+    """
+    for name in ("DECKY_USER_HOME", "HOME"):
+        value = getattr(decky, name, "") or os.environ.get(name, "")
+        if value:
+            return value
+    return os.path.expanduser("~")
+
+
+def _first_path(candidates) -> str:
+    for path in candidates:
+        for found in sorted(glob.glob(path)):
+            if os.path.exists(found):
+                return found
+    return ""
+
+
+def _detect_enhancers() -> list:
+    """What is installed, and where. Nothing here is started or configured."""
+    home = _user_home()
+    plugins = os.path.dirname(PLUGIN_DIR)
+
+    mako_plugin = _first_path([os.path.join(plugins, "*MAKO*"),
+                               os.path.join(plugins, "*mako*")])
+    mako_render = _first_path([os.path.join(home, ".local/bin/mako-run"),
+                               os.path.join(home, ".local/bin/mako-ui")])
+    lossless = _first_path([
+        os.path.join(home, ".steam/steam/steamapps/common/Lossless Scaling/Lossless.dll"),
+        os.path.join(home, ".local/share/Steam/steamapps/common/Lossless Scaling/Lossless.dll"),
+        "/run/media/*/steamapps/common/Lossless Scaling/Lossless.dll",
+    ])
+    mangohud = _first_path([
+        "/usr/share/vulkan/implicit_layer.d/MangoHud*.json",
+        os.path.join(home, ".local/share/vulkan/implicit_layer.d/MangoHud*.json"),
+    ])
+    vkbasalt = _first_path([
+        "/usr/share/vulkan/implicit_layer.d/vkBasalt.json",
+        os.path.join(home, ".local/share/vulkan/implicit_layer.d/vkBasalt.json"),
+    ])
+
+    return [
+        {"key": "mako", "name": "MAKO - Frame Generation",
+         "installed": bool(mako_plugin), "path": mako_plugin,
+         "note": "enhancer.mako.desc", "url": "https://github.com/eugeniosegala/MAKO"},
+        {"key": "mako_renderer", "name": "MAKO Renderer",
+         "installed": bool(mako_render), "path": mako_render,
+         "note": "enhancer.makoRenderer.desc", "url": ""},
+        {"key": "lossless", "name": "Lossless Scaling",
+         "installed": bool(lossless), "path": lossless,
+         "note": "enhancer.lossless.desc", "url": ""},
+        {"key": "mangohud", "name": "MangoHud",
+         "installed": bool(mangohud), "path": mangohud,
+         "note": "enhancer.mangohud.desc", "url": ""},
+        {"key": "vkbasalt", "name": "vkBasalt",
+         "installed": bool(vkbasalt), "path": vkbasalt,
+         "note": "enhancer.vkbasalt.desc", "url": ""},
+    ]
+
+
 # ── Conflicting TDP controllers ────────────────────────────────────────────────
 #
 # Two things driving the same three limits fight, and the loser is whoever
@@ -2144,6 +2215,13 @@ class Plugin:
 
     async def get_power_source(self) -> dict:
         return {"ac": await _offload(_get_ac_online)}
+
+    async def get_enhancers(self) -> dict:
+        """Image-quality and frame-rate tools present on this machine.
+
+        Read-only on purpose: LTDP reports them, it does not drive them.
+        """
+        return {"enhancers": await _offload(_detect_enhancers)}
 
     async def get_fan_state(self) -> dict:
         """Fan mode, the curve in force, and whether the fans are flat out."""

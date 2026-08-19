@@ -13,6 +13,8 @@ import {
 import {
   ButtonItem,
   DialogButton,
+  GamepadButton,
+  type GamepadEvent as DeckyGamepadEvent,
   DropdownItem,
   Field,
   findModuleExport,
@@ -235,6 +237,15 @@ interface TdpValues  {
 /** Text the backend wants shown: a key from i18n plus its placeholders. */
 interface Localised { key: string; params?: Record<string, string | number> }
 
+interface Enhancer {
+  key: string;
+  name: string;
+  installed: boolean;
+  path: string;
+  note: string;
+  url: string;
+}
+
 interface FanState {
   supported: boolean;
   mode: string;
@@ -330,6 +341,7 @@ const setLanguageCall   = callable<[string], TdpResult>("set_language");
 const getVersion        = callable<[], { version: string }>("get_version");
 const checkForUpdates   = callable<[], UpdateInfo>("check_for_updates");
 const performUpdate     = callable<[], { success: boolean; path?: string; error?: string }>("perform_update");
+const getEnhancers      = callable<[], { enhancers: Enhancer[] }>("get_enhancers");
 const getFanState       = callable<[], FanState>("get_fan_state");
 const setFanModeCall    = callable<[string], TdpResult>("set_fan_mode");
 const getChargeLimit    = callable<[], ChargeLimit>("get_charge_limit");
@@ -713,6 +725,15 @@ const ChipIcon: FC = () => (
 const tempColor = (celsius: number) =>
   celsius >= 90 ? BAD_COLOR : celsius >= 80 ? WARN_COLOR : OK_COLOR;
 
+type TabKey = "tdp" | "enhancers";
+
+const TABS: TabKey[] = ["tdp", "enhancers"];
+
+const TAB_KEYS: Record<TabKey, StringKey> = {
+  tdp: "tab.tdp",
+  enhancers: "tab.enhancers",
+};
+
 const FAN_MODES = ["auto", "quiet", "balanced", "cool", "max"] as const;
 
 const FAN_MODE_KEYS: Record<string, StringKey> = {
@@ -883,6 +904,95 @@ const LivePanel: FC<{ device: string; backend: string }> = ({ device, backend })
           </PanelSectionRow>
         </>
       )}
+    </PanelSection>
+  );
+};
+
+// ── Enhancers ──────────────────────────────────────────────────────────────────
+
+/**
+ * What else on this machine changes how a game looks or how fast it runs.
+ *
+ * Read-only, deliberately. MAKO is a separate Decky plugin with its own backend
+ * and a Vulkan layer of its own, under a different licence - one plugin cannot
+ * render or drive another. Reporting what is present is the honest half, and it
+ * is the half that matters next to a TDP limit: generated frames are what let
+ * the limit come down.
+ */
+const EnhancersTab: FC = () => {
+  const [items, setItems] = useState<Enhancer[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [, t] = useLang();
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      setItems((await getEnhancers()).enhancers ?? []);
+    } catch (e) {
+      notifyFailure("LTDP", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  return (
+    <PanelSection title={t("enhancer.title")}>
+      <PanelSectionRow>
+        <div style={{ fontSize: "11px", color: DIM_COLOR, lineHeight: "1.5" }}>
+          {t("enhancer.intro")}
+        </div>
+      </PanelSectionRow>
+      {items === null ? (
+        <PanelSectionRow><Spinner /></PanelSectionRow>
+      ) : (
+        items.map((item) => (
+          <PanelSectionRow key={item.key}>
+            <Field
+              label={item.name}
+              description={
+                <span>
+                  <span style={{ color: item.installed ? OK_COLOR : DIM_COLOR,
+                                 fontWeight: "bold" }}>
+                    {item.installed ? t("enhancer.installed") : t("enhancer.missing")}
+                  </span>
+                  <br />
+                  <span style={{ fontSize: "11px" }}>
+                    {localise(t, { key: item.note })}
+                  </span>
+                  {item.installed && item.path && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: "10px", fontFamily: "monospace",
+                                     color: DIM_COLOR, wordBreak: "break-all" }}>
+                        {item.path}
+                      </span>
+                    </>
+                  )}
+                  {!item.installed && item.url && (
+                    <>
+                      <br />
+                      <span style={{ fontSize: "10px", fontFamily: "monospace",
+                                     color: DIM_COLOR, wordBreak: "break-all" }}>
+                        {item.url}
+                      </span>
+                    </>
+                  )}
+                </span>
+              }
+            />
+          </PanelSectionRow>
+        ))
+      )}
+      <PanelSectionRow>
+        <div style={styles.infoBox}>{t("enhancer.why")}</div>
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <ButtonItem layout="below" onClick={load} disabled={loading}>
+          {loading ? t("diag.reading") : t("enhancer.refresh")}
+        </ButtonItem>
+      </PanelSectionRow>
     </PanelSection>
   );
 };
@@ -1185,6 +1295,7 @@ const Content: FC = () => {
   const [backend, setBackend] = useState("");
   const [deviceName, setDeviceName] = useState("Legion Go 1");
   const [charge, setCharge] = useState<ChargeLimit | null>(null);
+  const [tab, setTab] = useState<TabKey>("tdp");
   const [fans, setFans] = useState<FanState | null>(null);
   const [lang, t] = useLang();
 
@@ -1600,6 +1711,29 @@ const Content: FC = () => {
     }
   };
 
+  // ── Tabs ─────────────────────────────────────────────────────────────────────
+  // The shoulder buttons page between them, the way the rest of the Steam UI
+  // does. The strip below stays clickable regardless: Steam is free to consume
+  // a bumper before it reaches us, and a tab you cannot reach by touch would
+  // then be a tab you cannot reach at all.
+  const cycleTab = (delta: number) =>
+    setTab(TABS[(TABS.indexOf(tab) + delta + TABS.length) % TABS.length]);
+
+  const onPanelButton = (event: DeckyGamepadEvent) => {
+    switch (event?.detail?.button) {
+      case GamepadButton.BUMPER_RIGHT:
+      case GamepadButton.TRIGGER_RIGHT:
+        cycleTab(1);
+        break;
+      case GamepadButton.BUMPER_LEFT:
+      case GamepadButton.TRIGGER_LEFT:
+        cycleTab(-1);
+        break;
+      default:
+        break;
+    }
+  };
+
   // ── Fans ─────────────────────────────────────────────────────────────────────
   // The firmware wipes the curve whenever the power mode moves, which is every
   // time a TDP value is applied - the backend's enforce pass puts it back, so
@@ -1745,7 +1879,30 @@ const Content: FC = () => {
   );
 
   return (
-    <>
+    <Focusable onButtonDown={onPanelButton} style={{ display: "flex",
+                                                     flexDirection: "column" }}>
+      <PanelSection>
+        <PanelSectionRow>
+          <Focusable style={styles.segmentRow} flow-children="horizontal">
+            {TABS.map((key) => (
+              <DialogButton
+                key={key}
+                style={{ ...styles.segment, ...(tab === key ? activeStyle : {}) }}
+                onClick={() => setTab(key)}
+              >
+                {t(TAB_KEYS[key])}
+              </DialogButton>
+            ))}
+          </Focusable>
+        </PanelSectionRow>
+        <PanelSectionRow>
+          <div style={{ fontSize: "10px", color: DIM_COLOR, textAlign: "center" }}>
+            {t("tab.hint")}
+          </div>
+        </PanelSectionRow>
+      </PanelSection>
+
+      {tab === "enhancers" ? <EnhancersTab /> : <>
       <PanelSection title="LTDP">
         <PanelSectionRow>
           <ToggleField
@@ -2046,12 +2203,14 @@ const Content: FC = () => {
         </PanelSectionRow>
       </PanelSection>
 
+      </>}
+
       <PanelSectionRow>
         <div style={styles.footer}>
           by <span style={styles.footerName}>LORDEL</span>
         </div>
       </PanelSectionRow>
-    </>
+    </Focusable>
   );
 };
 

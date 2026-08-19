@@ -177,6 +177,27 @@ const EN = {
   "battery.unsupported": "This system exposes no charge limit control",
   "battery.via": "via {source}",
 
+  // -- tabs and enhancers ---------------------------------------------------
+  "tab.tdp": "Power",
+  "tab.enhancers": "Enhancers",
+  "tab.hint": "R1 / R2 switches tab",
+  "enhancer.title": "Enhancers",
+  "enhancer.intro":
+    "Tools on this machine that change how a game looks or how many frames it makes. LTDP reports them; it does not drive them - each has its own plugin or launcher.",
+  "enhancer.installed": "Installed",
+  "enhancer.missing": "Not installed",
+  "enhancer.mako.desc":
+    "Frame generation through a Vulkan layer. A separate Decky plugin, GPL-3.0, and it needs a licensed copy of Lossless Scaling.",
+  "enhancer.makoRenderer.desc":
+    "MAKO's renderer, installed into ~/.local/bin by its own plugin.",
+  "enhancer.lossless.desc":
+    "The Steam app MAKO reads its frame-generation model from. Bought separately.",
+  "enhancer.mangohud.desc": "The on-screen overlay for frame rate, frame times and power.",
+  "enhancer.vkbasalt.desc": "Post-processing: sharpening, FXAA, custom shaders.",
+  "enhancer.why":
+    "Frame generation and a TDP limit are two halves of the same decision: generated frames are what let the limit come down.",
+  "enhancer.refresh": "Rescan",
+
   // -- updates --------------------------------------------------------------
   "update.title": "Updates",
   "update.installed": "Installed",
@@ -372,6 +393,26 @@ const RU: Record<Key, string> = {
   "battery.unsupported": "Эта система не даёт управлять лимитом заряда",
   "battery.via": "через {source}",
 
+  "tab.tdp": "Питание",
+  "tab.enhancers": "Улучшайзеры",
+  "tab.hint": "R1 / R2 — переключить вкладку",
+  "enhancer.title": "Улучшайзеры",
+  "enhancer.intro":
+    "Инструменты на этой машине, которые меняют картинку или число кадров. LTDP их показывает, но не управляет ими — у каждого свой плагин или запускалка.",
+  "enhancer.installed": "Установлено",
+  "enhancer.missing": "Не установлено",
+  "enhancer.mako.desc":
+    "Генерация кадров через слой Vulkan. Отдельный плагин Decky, лицензия GPL-3.0, нужен купленный Lossless Scaling.",
+  "enhancer.makoRenderer.desc":
+    "Рендерер MAKO, его собственный плагин ставит его в ~/.local/bin.",
+  "enhancer.lossless.desc":
+    "Приложение Steam, из которого MAKO берёт модель генерации кадров. Покупается отдельно.",
+  "enhancer.mangohud.desc": "Оверлей с кадрами, временем кадра и потреблением.",
+  "enhancer.vkbasalt.desc": "Постобработка: резкость, FXAA, свои шейдеры.",
+  "enhancer.why":
+    "Генерация кадров и лимит TDP — две половины одного решения: сгенерированные кадры и позволяют опустить лимит.",
+  "enhancer.refresh": "Пересканировать",
+
   "update.title": "Обновления",
   "update.installed": "Установлено",
   "update.latest": "Доступно",
@@ -560,6 +601,26 @@ const ES: Record<Key, string> = {
   "battery.limitOff": "La batería se carga por completo",
   "battery.unsupported": "Este sistema no permite controlar el límite de carga",
   "battery.via": "mediante {source}",
+
+  "tab.tdp": "Energía",
+  "tab.enhancers": "Mejoras",
+  "tab.hint": "R1 / R2 cambia de pestaña",
+  "enhancer.title": "Mejoras",
+  "enhancer.intro":
+    "Herramientas de este equipo que cambian cómo se ve un juego o cuántos fotogramas produce. LTDP las muestra; no las controla: cada una tiene su propio plugin o lanzador.",
+  "enhancer.installed": "Instalado",
+  "enhancer.missing": "No instalado",
+  "enhancer.mako.desc":
+    "Generación de fotogramas mediante una capa Vulkan. Es un plugin de Decky aparte, GPL-3.0, y necesita una copia con licencia de Lossless Scaling.",
+  "enhancer.makoRenderer.desc":
+    "El renderizador de MAKO, instalado en ~/.local/bin por su propio plugin.",
+  "enhancer.lossless.desc":
+    "La aplicación de Steam de la que MAKO toma su modelo de generación de fotogramas. Se compra aparte.",
+  "enhancer.mangohud.desc": "La superposición de fotogramas, tiempos de fotograma y consumo.",
+  "enhancer.vkbasalt.desc": "Posprocesado: nitidez, FXAA, shaders propios.",
+  "enhancer.why":
+    "La generación de fotogramas y el límite de TDP son dos mitades de la misma decisión: los fotogramas generados son lo que permite bajar el límite.",
+  "enhancer.refresh": "Volver a escanear",
 
   "update.title": "Actualizaciones",
   "update.installed": "Instalada",

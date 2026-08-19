@@ -3,6 +3,27 @@
 All notable changes to LTDP, newest first. The upstream LeGoTDP history this
 fork is built on is kept at the bottom of the file.
 
+## [1.7.0] - 2026-08-19
+
+### Added
+
+- **Tabs, paged with the shoulder buttons.** R1 and R2 move forward, L1 and L2
+  back, and the strip at the top stays clickable: Steam is free to consume a
+  bumper before it reaches the panel, and a tab reachable only by a button the
+  system swallowed would be a tab nobody can open.
+- **An Enhancers tab** listing the tools on this machine that change how a game
+  looks or how many frames it produces: MAKO and its renderer, Lossless
+  Scaling, MangoHud, vkBasalt. Each shows installed or not, and where it was
+  found.
+
+  It reports; it does not drive. MAKO is a separate Decky plugin with its own
+  backend and a Vulkan layer of its own, under GPL-3.0 against this project's
+  BSD-3-Clause, and it needs a licensed copy of Lossless Scaling. A Decky plugin
+  cannot render or control another one, and copying its code here would relicense
+  everything. What is useful next to a TDP limit is knowing whether frame
+  generation is present at all - generated frames are what let the limit come down.
+- All of it in English, Russian and Spanish, like the rest of the panel.
+
 ## [1.6.1] - 2026-08-19
 
 ### Fixed

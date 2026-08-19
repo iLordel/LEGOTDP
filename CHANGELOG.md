@@ -16,6 +16,10 @@ fork is built on is kept at the bottom of the file.
 
 ### Fixed
 
+- `bios_number("")` read the machine's own DMI instead of answering zero. An
+  explicit empty string means there is nothing to parse; only `None` means "go
+  and look". Harmless on a Legion Go, wrong anywhere else - a CI runner with a
+  BIOS of its own answered 41 to a question about an empty string.
 - **A release tagged with something that is not a version is refused rather
   than guessed at.** Upstream compared such a tag as a string, which reads
   anything unequal as "newer": a release tagged `LDTP` was announced as an

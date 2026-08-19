@@ -40,14 +40,19 @@ def cpu_model() -> str:
     return ""
 
 
-def bios_number(raw: str = "") -> int:
+def bios_number(raw: str | None = None) -> int:
     """The numeric part of a Lenovo BIOS string, or 0.
 
     Lenovo numbers this family `N3CN<nn>WW` - N3CN40WW is the January 2026
     release. Parsed the same way Handheld Daemon does it, because that is the
     only scheme this machine has ever used.
+
+    `None` means "read this machine's DMI"; an empty string means what it says,
+    that there is nothing to parse. Those were the same thing until a CI runner
+    with its own BIOS answered 41 to a question about an empty string.
     """
-    raw = raw or dmi("bios_version")
+    if raw is None:
+        raw = dmi("bios_version")
     digits = "".join(c for c in raw.replace("N3CN", "", 1).split("WW")[0] if c.isdigit())
     try:
         return int(digits)

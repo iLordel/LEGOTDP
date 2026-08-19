@@ -177,6 +177,12 @@ class BiosBaseline(unittest.TestCase):
 
     def test_an_unparseable_string_is_zero_rather_than_a_guess(self):
         self.assertEqual(ltdp_device.bios_number("garbage"), 0)
+
+    def test_an_empty_string_is_not_a_request_to_read_the_machine(self):
+        """It was, until a CI runner answered 41 to a question about "".
+
+        `None` means "go and read DMI"; "" means there is nothing to parse.
+        """
         self.assertEqual(ltdp_device.bios_number(""), 0)
 
     def test_the_baseline_is_recognised(self):

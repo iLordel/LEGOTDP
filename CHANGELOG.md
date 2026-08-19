@@ -3,6 +3,20 @@
 All notable changes to LTDP, newest first. The upstream LeGoTDP history this
 fork is built on is kept at the bottom of the file.
 
+## [1.6.1] - 2026-08-19
+
+### Fixed
+
+- **acpi_call is looked for again, not only at startup.** It is a DKMS module,
+  and on SteamOS installing it is something the user does by hand long after
+  boot - so a single probe at startup meant the fan section stayed unavailable
+  until the plugin was reloaded, with the message giving no hint that anything
+  had changed. Opening the panel now re-probes when the interface is missing,
+  rate-limited to once a minute. The paths that run constantly - applying
+  limits, the enforce pass - still read the cached answer: probing means a
+  modprobe and a write to /proc/acpi/call, which is not something to do every
+  five seconds on a machine that will never have the module.
+
 ## [1.6.0] - 2026-08-19
 
 ### Added

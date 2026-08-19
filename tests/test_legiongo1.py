@@ -522,7 +522,7 @@ class ChargeLimit(unittest.TestCase):
         self.addCleanup(setattr, main, "_acpi_charge_limit", self._read)
         self.addCleanup(setattr, ltdp_acpi, "set_charge_limit", self._set)
         main.CHARGE_LIMIT_GLOB = os.path.join(self.root, "charge_control_end_threshold")
-        main._acpi_ready = lambda: False
+        main._acpi_ready = lambda rescan=False: False
 
     def _write_node(self, value: int):
         with open(self.node, "w") as handle:
@@ -558,7 +558,7 @@ class ChargeLimit(unittest.TestCase):
     def test_the_firmware_path_is_used_when_the_kernel_offers_nothing(self):
         main.CHARGE_LIMIT_GLOB = "/nonexistent/charge_control_end_threshold"
         applied = []
-        main._acpi_ready = lambda: True
+        main._acpi_ready = lambda rescan=False: True
         main._acpi_charge_limit = lambda: bool(applied and applied[-1])
         ltdp_acpi.set_charge_limit = lambda enabled: (applied.append(enabled), True)[1]
         self.assertTrue(main._apply_charge_limit(True)["success"])

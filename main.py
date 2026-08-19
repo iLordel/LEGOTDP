@@ -397,7 +397,7 @@ def _read_charge_limit() -> dict:
             return {"supported": True, "enabled": threshold < CHARGE_FULL_PERCENT,
                     "threshold": threshold, "source": "sysfs", "path": node}
 
-    if _acpi_ready():
+    if _acpi_ready(rescan=True):
         enabled = _acpi_charge_limit()
         if enabled is not None:
             return {"supported": True, "enabled": enabled,
@@ -1228,12 +1228,14 @@ _fan_attempts: int = 0
 FAN_MAX_ATTEMPTS = 3
 
 
-def _fan_available() -> bool:
-    return _acpi_ready()
+def _fan_available(rescan: bool = False) -> bool:
+    return _acpi_ready(rescan)
 
 
 def _read_fan_state() -> dict:
-    if not _fan_available():
+    # Asked for when the panel opens, which is exactly when someone who just
+    # installed acpi_call is looking for the fan section to come alive.
+    if not _fan_available(rescan=True):
         return {"supported": False, "mode": "auto", "curve": [], "full_speed": False}
     full = ltdp_acpi.get_full_fan_speed()
     return {
@@ -1325,9 +1327,40 @@ _applied_at: float = 0.0
 _acpi_available: bool = False
 
 
-def _acpi_ready() -> bool:
-    """True when the firmware is reachable through acpi_call on this machine."""
-    return _acpi_available and _device().supports_acpi_call
+# acpi_call can arrive after the plugin has started: it is a DKMS module, and
+# on SteamOS installing it is something the user does by hand, long after boot.
+# Probed once at startup and then re-probed on demand, rate-limited - the same
+# shape as the powercap lookup, and for the same reason.
+_ACPI_RESCAN_S = 60.0
+_acpi_probed_at: float = 0.0
+
+
+def _acpi_ready(rescan: bool = False) -> bool:
+    """True when the firmware is reachable through acpi_call on this machine.
+
+    `rescan` is for the paths a user is looking at when they wonder why a
+    feature is missing - the fan section and the charge limit. The hot paths
+    (applying limits, the enforce pass) read the cached answer instead: probing
+    means a modprobe and a write to /proc/acpi/call, which is not something to
+    do every five seconds on a machine that will never have the module.
+    """
+    global _acpi_available, _acpi_probed_at
+    if not _device().supports_acpi_call:
+        return False
+    if not _acpi_available and rescan:
+        now = time.monotonic()
+        if now - _acpi_probed_at >= _ACPI_RESCAN_S:
+            _acpi_probed_at = now
+            # Drop the module's own "already tried" latch as well, or a
+            # modprobe that failed before the user installed it would never
+            # be attempted again.
+            ltdp_acpi.reset_cache()
+            _acpi_available = ltdp_acpi.available(force=True)
+            if _acpi_available:
+                decky.logger.info(
+                    "[ltdp] acpi_call answered on a re-probe; the firmware "
+                    "interface is available now")
+    return _acpi_available
 
 
 def _probe_backends() -> dict:

@@ -237,6 +237,16 @@ interface TdpValues  {
 /** Text the backend wants shown: a key from i18n plus its placeholders. */
 interface Localised { key: string; params?: Record<string, string | number> }
 
+interface MakoRelease {
+  available: boolean;
+  plugin_name?: string;
+  version?: string;
+  asset?: string;
+  url?: string;
+  size?: number;
+  error?: string;
+}
+
 interface Enhancer {
   key: string;
   name: string;
@@ -342,6 +352,7 @@ const getVersion        = callable<[], { version: string }>("get_version");
 const checkForUpdates   = callable<[], UpdateInfo>("check_for_updates");
 const performUpdate     = callable<[], { success: boolean; path?: string; error?: string }>("perform_update");
 const getEnhancers      = callable<[], { enhancers: Enhancer[] }>("get_enhancers");
+const getMakoRelease    = callable<[], MakoRelease>("get_mako_release");
 const getFanState       = callable<[], FanState>("get_fan_state");
 const setFanModeCall    = callable<[string], TdpResult>("set_fan_mode");
 const getChargeLimit    = callable<[], ChargeLimit>("get_charge_limit");
@@ -919,10 +930,54 @@ const LivePanel: FC<{ device: string; backend: string }> = ({ device, backend })
  * is the half that matters next to a TDP limit: generated frames are what let
  * the limit come down.
  */
+/**
+ * Hand a plugin to Decky's own installer.
+ *
+ * `utilities/install_plugin` is what Decky's store calls: it does not install
+ * anything by itself, it raises Decky's confirmation prompt and Decky does the
+ * download and unpacking after the user agrees. That is the only way this
+ * plugin will touch another one - unpacking a zip into somebody else's plugin
+ * directory behind Decky's back would produce an install Decky does not know
+ * about.
+ *
+ * It is an internal loader route, so it is reached defensively: if a future
+ * Decky moves it, the panel says so and shows the address instead.
+ */
+async function requestPluginInstall(artifact: string, name: string, version: string) {
+  const backend = (window as any)?.DeckyBackend;
+  const install = backend?.callable?.("utilities/install_plugin");
+  if (typeof install !== "function") return false;
+  // hash empty: Decky skips the checksum when none is given, and the archive
+  // comes straight from the project's own GitHub release over TLS.
+  await install(artifact, name, version, "", 0);
+  return true;
+}
+
 const EnhancersTab: FC = () => {
   const [items, setItems] = useState<Enhancer[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [installing, setInstalling] = useState(false);
   const [, t] = useLang();
+
+  const installMako = useCallback(async () => {
+    setInstalling(true);
+    try {
+      const release = await getMakoRelease();
+      if (!release.available || !release.url) {
+        notify("LTDP", t("enhancer.releaseFailed",
+          { message: release.error ?? t("status.unknownError") }));
+        return;
+      }
+      const asked = await requestPluginInstall(
+        release.url, release.plugin_name ?? "MAKO", release.version ?? "");
+      if (!asked) notify("LTDP", t("enhancer.installUnavailable"));
+    } catch (e) {
+      notifyFailure("LTDP", e);
+    } finally {
+      setInstalling(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -985,6 +1040,25 @@ const EnhancersTab: FC = () => {
           </PanelSectionRow>
         ))
       )}
+      {items?.some((i) => i.key === "mako" && !i.installed) && (
+        <>
+          <PanelSectionRow>
+            <ButtonItem layout="below" onClick={installMako} disabled={installing}>
+              {installing
+                ? t("enhancer.installing")
+                : t("enhancer.install", { name: "MAKO" })}
+            </ButtonItem>
+          </PanelSectionRow>
+          <PanelSectionRow>
+            <div style={{ fontSize: "11px", color: DIM_COLOR, lineHeight: "1.5" }}>
+              {t("enhancer.installPrompt")}
+            </div>
+          </PanelSectionRow>
+        </>
+      )}
+      <PanelSectionRow>
+        <div style={styles.infoBox}>{t("enhancer.afterInstall")}</div>
+      </PanelSectionRow>
       <PanelSectionRow>
         <div style={styles.infoBox}>{t("enhancer.why")}</div>
       </PanelSectionRow>

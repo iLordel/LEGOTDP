@@ -93,7 +93,10 @@ at runtime against what the firmware itself reports.
   **Enhancers**. The second lists what else on this machine changes how a game
   looks or how many frames it makes — MAKO and its renderer, Lossless Scaling,
   MangoHud, vkBasalt — with installed-or-not and the path each was found at.
-  It reports them; it does not drive them. [MAKO](https://github.com/eugeniosegala/MAKO)
+  MAKO can be **installed from that tab**: the button hands the release to
+  Decky through the same route Decky's own store uses, and Decky asks you to
+  confirm before it downloads anything. What the tab cannot do is drive these
+  tools. [MAKO](https://github.com/eugeniosegala/MAKO)
   is a separate Decky plugin with a Vulkan layer of its own, under GPL-3.0
   against this project's BSD-3-Clause, and it needs a licensed copy of Lossless
   Scaling — one plugin cannot render or control another. Knowing whether frame

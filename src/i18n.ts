@@ -196,6 +196,15 @@ const EN = {
   "enhancer.vkbasalt.desc": "Post-processing: sharpening, FXAA, custom shaders.",
   "enhancer.why":
     "Frame generation and a TDP limit are two halves of the same decision: generated frames are what let the limit come down.",
+  "enhancer.install": "Install {name}",
+  "enhancer.installing": "Asking Decky...",
+  "enhancer.installPrompt": "Decky will ask you to confirm before it downloads anything.",
+  "enhancer.installSize": "{size} MB, version {version}",
+  "enhancer.installUnavailable":
+    "This build of Decky does not expose its installer to plugins. Install it yourself from the address above.",
+  "enhancer.releaseFailed": "Could not reach the release: {message}",
+  "enhancer.afterInstall":
+    "Once installed, MAKO appears as its own entry in Decky with its own panel - LTDP cannot show it here. It still needs its renderer, installed from that panel, and a licensed copy of Lossless Scaling.",
   "enhancer.refresh": "Rescan",
 
   // -- updates --------------------------------------------------------------
@@ -411,6 +420,15 @@ const RU: Record<Key, string> = {
   "enhancer.vkbasalt.desc": "Постобработка: резкость, FXAA, свои шейдеры.",
   "enhancer.why":
     "Генерация кадров и лимит TDP — две половины одного решения: сгенерированные кадры и позволяют опустить лимит.",
+  "enhancer.install": "Установить {name}",
+  "enhancer.installing": "Прошу Decky...",
+  "enhancer.installPrompt": "Decky спросит подтверждение прежде, чем что-то скачивать.",
+  "enhancer.installSize": "{size} МБ, версия {version}",
+  "enhancer.installUnavailable":
+    "Эта сборка Decky не даёт плагинам доступ к установщику. Поставьте вручную по адресу выше.",
+  "enhancer.releaseFailed": "Не удалось получить релиз: {message}",
+  "enhancer.afterInstall":
+    "После установки MAKO появится в Decky отдельным пунктом со своей панелью — показать её внутри LTDP нельзя. Ему ещё нужен собственный рендерер, он ставится из той же панели, и купленный Lossless Scaling.",
   "enhancer.refresh": "Пересканировать",
 
   "update.title": "Обновления",
@@ -620,6 +638,15 @@ const ES: Record<Key, string> = {
   "enhancer.vkbasalt.desc": "Posprocesado: nitidez, FXAA, shaders propios.",
   "enhancer.why":
     "La generación de fotogramas y el límite de TDP son dos mitades de la misma decisión: los fotogramas generados son lo que permite bajar el límite.",
+  "enhancer.install": "Instalar {name}",
+  "enhancer.installing": "Pidiéndoselo a Decky...",
+  "enhancer.installPrompt": "Decky pedirá confirmación antes de descargar nada.",
+  "enhancer.installSize": "{size} MB, versión {version}",
+  "enhancer.installUnavailable":
+    "Esta versión de Decky no expone su instalador a los plugins. Instálalo a mano desde la dirección de arriba.",
+  "enhancer.releaseFailed": "No se pudo obtener la publicación: {message}",
+  "enhancer.afterInstall":
+    "Una vez instalado, MAKO aparece en Decky como una entrada propia con su propio panel: LTDP no puede mostrarlo aquí. Además necesita su renderizador, que se instala desde ese panel, y una copia con licencia de Lossless Scaling.",
   "enhancer.refresh": "Volver a escanear",
 
   "update.title": "Actualizaciones",

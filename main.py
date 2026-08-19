@@ -966,6 +966,54 @@ def _profile_choices() -> list:
 # say what is on this machine, because frame generation and a TDP limit are two
 # halves of the same decision: generated frames are what let the limit come down.
 
+# MAKO publishes its Decky plugin as a release asset named MAKO-Decky-v*.zip.
+# Its tags are prefixed (plugin-v2.0.0), and the engine ships under tags of its
+# own, so the newest release is not necessarily a plugin release - the asset
+# name is what identifies one.
+MAKO_RELEASES_URL = "https://api.github.com/repos/eugeniosegala/MAKO/releases"
+MAKO_ASSET_PREFIX = "MAKO-Decky"
+MAKO_PLUGIN_NAME = "MAKO - Frame Generation"
+
+
+def _mako_release() -> dict:
+    """The newest MAKO Decky release, for handing to Decky's own installer.
+
+    Only the release metadata is fetched here - a few kilobytes of JSON from
+    GitHub, through the same TLS context and host allowlist the updater uses.
+    The 23 MB archive is downloaded by Decky, after the user has confirmed it
+    in Decky's own prompt. This plugin never unpacks another plugin.
+    """
+    try:
+        with updater.open_url(MAKO_RELEASES_URL, timeout=10, headers={
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "LTDP",
+        }) as response:
+            releases = json.loads(response.read(1_000_000))
+    except Exception as e:
+        decky.logger.warning(f"[ltdp] could not read MAKO releases: {e}")
+        return {"available": False, "error": str(e)}
+
+    if not isinstance(releases, list):
+        return {"available": False, "error": "unexpected GitHub response"}
+
+    for release in releases:
+        if release.get("draft") or release.get("prerelease"):
+            continue
+        for asset in release.get("assets", []):
+            name = str(asset.get("name", ""))
+            if name.startswith(MAKO_ASSET_PREFIX) and name.endswith(".zip"):
+                return {
+                    "available": True,
+                    "plugin_name": MAKO_PLUGIN_NAME,
+                    "version": str(release.get("tag_name", "")).replace("plugin-", ""),
+                    "asset": name,
+                    "url": str(asset.get("browser_download_url", "")),
+                    "size": int(asset.get("size", 0)),
+                    "error": "",
+                }
+    return {"available": False, "error": "no MAKO Decky release found"}
+
+
 def _user_home() -> str:
     """The desktop user's home, not root's.
 
@@ -2222,6 +2270,10 @@ class Plugin:
         Read-only on purpose: LTDP reports them, it does not drive them.
         """
         return {"enhancers": await _offload(_detect_enhancers)}
+
+    async def get_mako_release(self) -> dict:
+        """Where Decky can fetch MAKO from, so the panel can offer to install it."""
+        return await _offload(_mako_release)
 
     async def get_fan_state(self) -> dict:
         """Fan mode, the curve in force, and whether the fans are flat out."""

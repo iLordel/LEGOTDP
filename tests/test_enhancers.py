@@ -83,5 +83,67 @@ class EnhancerDetection(unittest.TestCase):
         self.assertEqual(keys, set())
 
 
+class MakoRelease(unittest.TestCase):
+    """Only the release metadata is read here; Decky downloads the archive."""
+
+    def _releases(self, payload):
+        import io
+        import json
+        real = main.updater.open_url
+        main.updater.open_url = lambda *a, **k: io.BytesIO(json.dumps(payload).encode())
+        try:
+            return main._mako_release()
+        finally:
+            main.updater.open_url = real
+
+    def test_the_plugin_asset_is_what_identifies_a_plugin_release(self):
+        result = self._releases([
+            {"tag_name": "render-v3.1.0",
+             "assets": [{"name": "mako-render-v3.1.0-linux.tar.xz",
+                         "browser_download_url": "https://example/engine", "size": 1}]},
+            {"tag_name": "plugin-v2.0.0",
+             "assets": [{"name": "MAKO-Decky-v2.0.0.zip",
+                         "browser_download_url": "https://example/plugin", "size": 23}]},
+        ])
+        self.assertTrue(result["available"])
+        self.assertEqual(result["asset"], "MAKO-Decky-v2.0.0.zip")
+        self.assertEqual(result["url"], "https://example/plugin")
+
+    def test_the_tag_prefix_is_stripped_from_the_version(self):
+        result = self._releases([{"tag_name": "plugin-v2.0.0", "assets": [
+            {"name": "MAKO-Decky-v2.0.0.zip", "browser_download_url": "u", "size": 1}]}])
+        self.assertEqual(result["version"], "v2.0.0")
+
+    def test_drafts_and_prereleases_are_skipped(self):
+        result = self._releases([
+            {"tag_name": "plugin-v9.9.9", "draft": True, "assets": [
+                {"name": "MAKO-Decky-v9.9.9.zip", "browser_download_url": "d", "size": 1}]},
+            {"tag_name": "plugin-v2.0.0", "assets": [
+                {"name": "MAKO-Decky-v2.0.0.zip", "browser_download_url": "r", "size": 1}]},
+        ])
+        self.assertEqual(result["url"], "r")
+
+    def test_engine_only_releases_are_not_offered_as_a_plugin(self):
+        result = self._releases([{"tag_name": "render-v3.1.0", "assets": [
+            {"name": "mako-render-v3.1.0-linux.tar.xz", "browser_download_url": "e",
+             "size": 1}]}])
+        self.assertFalse(result["available"])
+        self.assertIn("no MAKO Decky release", result["error"])
+
+    def test_a_network_failure_is_reported_not_raised(self):
+        real = main.updater.open_url
+
+        def explode(*a, **k):
+            raise OSError("no route to host")
+
+        main.updater.open_url = explode
+        try:
+            result = main._mako_release()
+        finally:
+            main.updater.open_url = real
+        self.assertFalse(result["available"])
+        self.assertIn("no route to host", result["error"])
+
+
 if __name__ == "__main__":
     unittest.main()

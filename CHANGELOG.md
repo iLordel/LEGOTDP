@@ -3,6 +3,27 @@
 All notable changes to LTDP, newest first. The upstream LeGoTDP history this
 fork is built on is kept at the bottom of the file.
 
+## [1.8.0] - 2026-08-19
+
+### Added
+
+- **The Enhancers tab can install MAKO.** The button asks Decky, through the
+  same `utilities/install_plugin` route Decky's own store uses: Decky raises its
+  confirmation prompt, downloads the release archive and unpacks it. This plugin
+  never touches another plugin's directory - an install Decky does not know
+  about is an install it cannot update or remove.
+
+  The release is found by asset name (`MAKO-Decky-*.zip`) rather than by taking
+  the newest tag, because the engine ships under tags of its own and the newest
+  release is often not a plugin release. Only the metadata is fetched here, a
+  few kilobytes of JSON over the updater's TLS context and GitHub allowlist.
+
+  The route is internal to Decky, so it is reached defensively: if a future
+  version moves it, the panel says so and shows the address to install by hand.
+  And the panel is honest about what installing gets you - MAKO appears as its
+  own entry with its own interface, which LTDP cannot display, and it still
+  needs its renderer and a licensed copy of Lossless Scaling.
+
 ## [1.7.0] - 2026-08-19
 
 ### Added

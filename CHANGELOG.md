@@ -16,6 +16,10 @@ fork is built on is kept at the bottom of the file.
   limits, the enforce pass - still read the cached answer: probing means a
   modprobe and a write to /proc/acpi/call, which is not something to do every
   five seconds on a machine that will never have the module.
+- The "never probed" sentinel is `None`, not `0.0`. `time.monotonic()` counts
+  from boot, so on a freshly started machine zero is a timestamp seconds in the
+  past rather than never, and the first re-probe never happened - the same trap
+  `_wmi_verified_at` already carried a comment about. A CI runner caught it.
 
 ## [1.6.0] - 2026-08-19
 

@@ -26,7 +26,7 @@ class AcpiRescan(unittest.TestCase):
         main._wmi_only_cache = None
         ltdp_device.reset_cache()
         main._acpi_available = False
-        main._acpi_probed_at = 0.0
+        main._acpi_probed_at = None
         self.answer = False
         ltdp_acpi.available = self._probe
         ltdp_acpi.reset_cache = lambda: None
@@ -54,9 +54,20 @@ class AcpiRescan(unittest.TestCase):
     def test_a_module_installed_after_startup_is_picked_up(self):
         main._acpi_ready(rescan=True)
         self.answer = True                       # the user installed acpi_call
-        main._acpi_probed_at = 0.0               # and looked again later
+        main._acpi_probed_at = None               # and looked again later
         self.assertTrue(main._acpi_ready(rescan=True))
         self.assertTrue(main._acpi_ready())      # and it stays known
+
+    def test_a_freshly_booted_machine_still_probes(self):
+        """monotonic() counts from boot, so "never" cannot be spelled 0.0."""
+        real = main.time.monotonic
+        main.time.monotonic = lambda: 2.0        # two seconds of uptime
+        try:
+            main._acpi_probed_at = None
+            self.assertFalse(main._acpi_ready(rescan=True))
+        finally:
+            main.time.monotonic = real
+        self.assertEqual(self.probes, [True])
 
     def test_re_probing_is_rate_limited(self):
         main._acpi_ready(rescan=True)
@@ -66,7 +77,7 @@ class AcpiRescan(unittest.TestCase):
 
     def test_a_working_interface_is_never_re_probed(self):
         main._acpi_available = True
-        main._acpi_probed_at = 0.0
+        main._acpi_probed_at = None
         self.assertTrue(main._acpi_ready(rescan=True))
         self.assertEqual(self.probes, [])
 
@@ -75,7 +86,7 @@ class AcpiRescan(unittest.TestCase):
         main._dmi = lambda field: {"product_family": "Legion Go S 8APU1"}.get(field, "")
         main._wmi_only_cache = None
         ltdp_device.reset_cache()
-        main._acpi_probed_at = 0.0
+        main._acpi_probed_at = None
         self.assertFalse(main._acpi_ready(rescan=True))
         self.assertEqual(self.probes, [])
 

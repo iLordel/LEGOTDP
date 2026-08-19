@@ -1332,7 +1332,12 @@ _acpi_available: bool = False
 # Probed once at startup and then re-probed on demand, rate-limited - the same
 # shape as the powercap lookup, and for the same reason.
 _ACPI_RESCAN_S = 60.0
-_acpi_probed_at: float = 0.0
+# None, not 0.0 - the same trap _wmi_verified_at documents a few hundred lines
+# down. time.monotonic() counts from boot, so on a machine that has only just
+# started 0.0 is a timestamp seconds in the past rather than "never", and the
+# first re-probe never happened. Invisible on a console that has been on for
+# hours; a freshly booted CI runner caught it immediately.
+_acpi_probed_at: float | None = None
 
 
 def _acpi_ready(rescan: bool = False) -> bool:
@@ -1349,7 +1354,7 @@ def _acpi_ready(rescan: bool = False) -> bool:
         return False
     if not _acpi_available and rescan:
         now = time.monotonic()
-        if now - _acpi_probed_at >= _ACPI_RESCAN_S:
+        if _acpi_probed_at is None or now - _acpi_probed_at >= _ACPI_RESCAN_S:
             _acpi_probed_at = now
             # Drop the module's own "already tried" latch as well, or a
             # modprobe that failed before the user installed it would never

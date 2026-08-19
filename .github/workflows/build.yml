@@ -1,0 +1,115 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Check the backend parses
+        run: python -m compileall -q main.py ltdp_updater.py ltdp_device.py ltdp_acpi.py
+
+      # test_device.py skips itself here; there is no Legion Go on a runner.
+      - name: Backend tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Check the diagnostic script parses
+        run: bash -n scripts/ltdp-diagnostics.sh
+
+      - name: Check versions agree
+        run: |
+          plugin=$(python -c "import json;print(json.load(open('plugin.json'))['version'])")
+          pkg=$(python -c "import json;print(json.load(open('package.json'))['version'])")
+          echo "plugin.json=$plugin package.json=$pkg"
+          if [ "$plugin" != "$pkg" ]; then
+            echo "::error::version mismatch between plugin.json and package.json"
+            exit 1
+          fi
+          # A tag build must match the manifest it ships.
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "$plugin" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match plugin.json version $plugin"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Package
+        run: npm run package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LTDP
+          path: LTDP-*.zip
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Checkout first: it cleans the workspace, which would take the artifact
+      # with it. Needed here only for CHANGELOG.md.
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: LTDP
+
+      # Release notes are written by hand in CHANGELOG.md, not generated from
+      # commits: with no pull requests to summarise, --generate-notes produces
+      # little more than a compare link.
+      - name: Take the release notes from the changelog
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          awk -v tag="$TAG" '
+            $0 ~ "^## \\[" tag "\\]" { found = 1; next }
+            found && /^## / { exit }
+            found
+          ' CHANGELOG.md > notes.md
+          # Failing the release beats publishing an empty one.
+          if [ ! -s notes.md ]; then
+            echo "::error::CHANGELOG.md has no section for $TAG"
+            exit 1
+          fi
+          echo "--- notes for $TAG ---"
+          cat notes.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" LTDP-*.zip \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "LTDP $TAG" \
+            --notes-file notes.md

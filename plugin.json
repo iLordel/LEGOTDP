@@ -1,0 +1,20 @@
+{
+  "name": "LTDP",
+  "author": "LORDEL (port of LeGoTDP by Rayek)",
+  "flags": [
+    "root"
+  ],
+  "api_version": 1,
+  "main": "main.py",
+  "bin": "dist/index.js",
+  "version": "1.6.0",
+  "publish": {
+    "tags": [
+      "utilities",
+      "hardware",
+      "performance"
+    ],
+    "description": "TDP control for the original Lenovo Legion Go (Z1 Extreme) from the Steam overlay. Firmware-first backends, per-game profiles, separate charger profile, live power draw.",
+    "image": "https://raw.githubusercontent.com/iLordel/LEGOTDP/main/docs/store.jpg"
+  }
+}

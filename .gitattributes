@@ -1,0 +1,7 @@
+# The plugin runs on Linux; CRLF would break the shell script outright and
+# leave stray carriage returns in every Python file.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.zip binary
